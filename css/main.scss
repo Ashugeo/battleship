@@ -1,0 +1,52 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    margin: 50px;
+    font-family: sans-serif;
+}
+
+.grid {
+    display: inline-flex;
+    flex-flow: column wrap;
+
+    .row {
+        display: flex;
+        flex-flow: row wrap;
+    }
+
+    [class^="cell-"] {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 40px;
+        height: 40px;
+        border: 1px solid black;
+        margin-left: -1px;
+        margin-top: -1px;
+        user-select: none;
+
+        &[class^="cell-0-"] {
+            text-transform: uppercase;
+        }
+
+        &.locked {
+            cursor: default;
+        }
+
+        &:not(.locked) {
+            cursor: pointer;
+
+            &:hover {
+                background-color: #f0f0f0;
+            }
+        }
+
+        &.cell-0-0 {
+            visibility: hidden;
+        }
+    }
+}
