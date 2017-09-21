@@ -1,3 +1,3 @@
-#Batteship
+# Battleship
 
-"AI" versus human
+"AI" versus human battleship game
