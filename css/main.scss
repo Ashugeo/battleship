@@ -18,7 +18,7 @@ body {
         flex-flow: row wrap;
     }
 
-    [class^="cell-"] {
+    .cell {
         display: flex;
         justify-content: center;
         align-items: center;
@@ -29,12 +29,16 @@ body {
         margin-top: -1px;
         user-select: none;
 
-        &[class^="cell-0-"] {
+        &.locked {
+            cursor: default;
+        }
+
+        &[data-row="0"] {
             text-transform: uppercase;
         }
 
-        &.locked {
-            cursor: default;
+        &[data-row="0"][data-col="0"] {
+            visibility: hidden;
         }
 
         &:not(.locked) {
@@ -45,8 +49,6 @@ body {
             }
         }
 
-        &.cell-0-0 {
-            visibility: hidden;
-        }
+
     }
 }
