@@ -24,20 +24,18 @@ body {
         align-items: center;
         width: 40px;
         height: 40px;
-        border: 1px solid black;
+        border: 1px solid #ccc;
         margin-left: -1px;
         margin-top: -1px;
         user-select: none;
 
         &.locked {
             cursor: default;
+            background-color: #f0f0f0;
+            color: #999;
         }
 
-        &[data-row="0"] {
-            text-transform: uppercase;
-        }
-
-        &[data-row="0"][data-col="0"] {
+        &[data-row="0"][data-col="-"] {
             visibility: hidden;
         }
 
@@ -47,8 +45,23 @@ body {
             &:hover {
                 background-color: #f0f0f0;
             }
+
+            &.available {
+                background-color: rgba(0, 255, 0, 0.2);
+            }
+
+            &.unavailable {
+                background-color: rgba(255, 0, 0, .2);
+            }
+
+            &.placing-boat {
+                background-color: rgba(0, 0, 255, 0.2);
+            }
+
+            &.boat {
+                background-color: #a1d7ff;
+                // border-color: transparent;
+            }
         }
-
-
     }
 }
