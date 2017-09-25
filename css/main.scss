@@ -13,6 +13,10 @@ body {
     display: inline-flex;
     flex-flow: column wrap;
 
+    &#bot {
+        margin: 0 30px 30px 0;
+    }
+
     .row {
         display: flex;
         flex-flow: row wrap;
@@ -22,8 +26,8 @@ body {
         display: flex;
         justify-content: center;
         align-items: center;
-        width: 40px;
-        height: 40px;
+        width: 30px;
+        height: 30px;
         border: 1px solid #ccc;
         margin-left: -1px;
         margin-top: -1px;
@@ -51,7 +55,7 @@ body {
             }
 
             &.unavailable {
-                background-color: rgba(255, 0, 0, .2);
+                background-color: rgba(0, 0, 0, .2);
             }
 
             &.placing-boat {
@@ -59,7 +63,7 @@ body {
             }
 
             &.boat {
-                background-color: #a1d7ff;
+                background-color: #ffabab;
                 // border-color: transparent;
             }
         }

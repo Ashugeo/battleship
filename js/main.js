@@ -8,6 +8,9 @@ const boats = {
     'Destroyer': 2
 };
 
+let grid = [];
+let boatsGrid = [];
+let fails = [];
 let availableSlots = [];
 let placing = 0;
 let direction = 0;
@@ -16,9 +19,10 @@ $(document).ready(() => {
     // Build the grid
     buildGrid();
 
-    // Generate empty slots array
+    // Generate grid and empty slots arrays
     for (let i = 1; i <= 10; i += 1) {
         for (let j = 1; j <= 10; j += 1) {
+            grid.push('' + letters[i] + j);
             availableSlots.push('' + letters[i] + j);
         }
     }
@@ -27,6 +31,10 @@ $(document).ready(() => {
 
     // Place boats randomly
     placeBoatsRandom();
+
+    console.log('Boats successfuly placed');
+
+    showProbability();
 });
 
 /**
@@ -34,14 +42,18 @@ $(document).ready(() => {
 */
 function buildGrid() {
     for (let i = 0; i <= 10; i += 1) {
-        $('.grid').append('<div class="row"></div>');
+        $('.grid#bot').append('<div class="row"></div>');
+        $('.grid#user').append('<div class="row"></div>');
         for (let j = 0; j <= 10; j += 1) {
             if (j === 0) {
-                $('.row').eq(i).append('<div class="cell locked" data-col="' + letters[j] + '" data-row="' + i + '" >' + i + '</div>');
+                $('.grid#bot .row').eq(i).append('<div class="cell locked" data-col="' + letters[j] + '" data-row="' + i + '" >' + i + '</div>');
+                $('.grid#user .row').eq(i).append('<div class="cell locked" data-col="' + letters[j] + '" data-row="' + i + '" >' + i + '</div>');
             } else if (i === 0) {
-                $('.row').eq(i).append('<div class="cell locked" data-col="' + letters[j] + '" data-row="' + i + '">' + letters[j] + '</div>');
+                $('.grid#bot .row').eq(i).append('<div class="cell locked" data-col="' + letters[j] + '" data-row="' + i + '">' + letters[j] + '</div>');
+                $('.grid#user .row').eq(i).append('<div class="cell locked" data-col="' + letters[j] + '" data-row="' + i + '">' + letters[j] + '</div>');
             } else {
-                $('.row').eq(i).append('<div class="cell" data-col="' + letters[j] + '" data-row="' + i + '" ></div>');
+                $('.grid#bot .row').eq(i).append('<div class="cell" data-col="' + letters[j] + '" data-row="' + i + '" ></div>');
+                $('.grid#user .row').eq(i).append('<div class="cell" data-col="' + letters[j] + '" data-row="' + i + '" ></div>');
             }
         }
     }
@@ -72,21 +84,21 @@ function boatPlaceholder(i) {
     showPlaceholder(i);
 }
 
-function showPlaceholder(i, row, col) {
+function showPlaceholder(i, row, col, length) {
     $('.placing-boat').removeClass('placing-boat');
 
     if ($currentCell === undefined) {
         return false;
     }
 
-    if (placing !== 0 && $currentCell.hasClass('available')) {
+    if (length !== 0 && $currentCell.hasClass('available')) {
         if (direction === 0) {
-            for (let i = 0; i < placing; i += 1) {
+            for (let i = 0; i < length; i += 1) {
                 const cell = $('.cell[data-row="' + row + '"][data-col="' + (col + i) + '"]')
                 cell.addClass('placing-boat');
             }
         } else if (direction === 1) {
-            for (let i = 0; i < placing; i += 1) {
+            for (let i = 0; i < length; i += 1) {
                 const cell = $('.cell[data-row="' + (row + i) + '"][data-col="' + col + '"]')
                 cell.addClass('placing-boat');
             }
@@ -119,6 +131,23 @@ function showPlaceholder(i, row, col) {
 //     }
 // });
 
+$(document).on('click', '.grid#user .cell', (e) => {
+    const $cell = $(e.currentTarget);
+    const row = $cell.attr('data-row');
+    const col = $cell.attr('data-col');
+
+    const cellString = '' + col + row;
+
+    if (boatsGrid.indexOf(cellString) > -1) {
+        console.log('hit on', cellString);
+
+    } else {
+        console.log('missed on', cellString);
+        fails.push(cellString);
+        showProbability();
+    }
+});
+
 /**
 * Place all boats randomly
 */
@@ -132,7 +161,10 @@ function placeBoatsRandom() {
         const col = Math.ceil(Math.random()*10);
         const direction = parseInt([0, 1][Math.round(Math.random())].toString());
 
-        if (!fitBoat(length, row, col, direction)) {
+        if (fitBoat(length, row, col, direction)) {
+            // Set boat
+            setBoat(fitBoat(length, row, col, direction));
+        } else {
             // Rerun randomization
             i -= 1;
             continue;
@@ -141,14 +173,18 @@ function placeBoatsRandom() {
 }
 
 /**
+* /**
 * Check if a boat can be set at precise coordinates
-* @param  {int} length     Length of boat to place (2 to 5)
-* @param  {int} row        Row to start at
-* @param  {int} col        Column to start at
-* @param  {int} direction  0 for horizontal, or 1 for vertical
-* @return {bool}           True (this boat can be set here) or false
+* @param  {int}           length        Length of boat to place (2 to 5)
+* @param  {int}           row           Row to start at
+* @param  {int}           col           Column to start at
+* @param  {int}           direction     0 for horizontal, or 1 for vertical
+* @param  {Boolean}       [guess=false] Should we consider placed boats?
+* @return {Boolean|array}               Array if boat can be set, otherwise false
 */
-function fitBoat(length, row, col, direction) {
+function fitBoat(length, row, col, direction, guess = false) {
+    // console.log('Trying to set boat of length', length, 'at', letters[col], row, (direction === 0 ? 'horizontally' : 'vertically'));
+
     // Array of strings
     let boatCells = [];
 
@@ -160,17 +196,29 @@ function fitBoat(length, row, col, direction) {
         const cellString = '' + letters[(col + (i * (1 - direction)))] + (row + (i * direction));
 
         // Is this cell available?
-        if (availableSlots.indexOf(cellString) > -1) {
-            boatCells.push(cellString);
+        if (guess === false) {
+            if (availableSlots.indexOf(cellString) > -1) {
+                boatCells.push(cellString);
+            } else {
+                canSetBoat = false;
+            }
         } else {
-            canSetBoat = false;
+            // Does this cell exist?
+            if (grid.indexOf(cellString) > -1) {
+                // Is this cell a miss?
+                if (fails.indexOf(cellString) === -1) {
+                    boatCells.push(cellString);
+                } else {
+                    canSetBoat = false;
+                }
+            } else {
+                canSetBoat = false;
+            }
         }
     }
 
     if (canSetBoat) {
-        // Set boat
-        setBoat(boatCells);
-        return true;
+        return boatCells;
     } else {
         // Will rerun randomization
         return false;
@@ -189,9 +237,12 @@ function setBoat(boatCells) {
         let row = parseInt(boatCells[boatCell][1] + boatCells[boatCell][2]);
 
         // Show cell as filled with a boat
-        $('.cell[data-col="' + col + '"][data-row="' + row + '"]').addClass('boat');
+        $('.grid#bot .cell[data-col="' + col + '"][data-row="' + row + '"]').addClass('boat');
 
-        // Mark cell (and neighbours) as unavailable
+        // Mark cell as filled with a boat
+        boatsGrid.push(boatCells[boatCell]);
+
+        // Mark cell and neighbours as unavailable
         markUnavailable(col, row);
     }
 }
@@ -208,7 +259,7 @@ function markUnavailable(col, row) {
             let targetRow = row - 1 + j;
 
             // Convert coordinates to a string
-            cellString = '' + targetCol + targetRow;
+            let cellString = '' + targetCol + targetRow;
 
             if (availableSlots.indexOf(cellString) > -1) {
                 // Show cell as unavailable
@@ -218,5 +269,51 @@ function markUnavailable(col, row) {
                 availableSlots.splice(availableSlots.indexOf(cellString), 1);
             }
         }
+    }
+}
+
+function showProbability() {
+    let probabilities = {};
+    console.log(fails);
+
+    for (let i = 1; i <= 10; i += 1) {
+        for (let j = 1; j <= 10; j += 1) {
+            probabilities[('' + letters[i] + j)] = 0;
+        }
+    }
+
+    // For each boat
+    for (let b = 0; b < Object.keys(boats).length; b += 1) {
+
+        // For each cell
+        for (let i = 1; i <= 10; i += 1) {
+            for (let j = 1; j <= 10; j += 1) {
+
+                let cellString = '' + letters[j] + i;
+
+                for (o = 0; o <= 1; o += 1) {
+                    // console.log(letters[j], i, fitBoat(boats[Object.keys(boats)[b]], j, i, o, false));
+
+                    let canFit = fitBoat(boats[Object.keys(boats)[b]], j, i, o, true);
+
+                    if (canFit) {
+                        for (let i = 0; i < canFit.length; i += 1) {
+                            probabilities[canFit[i]] += 1;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    for (let i = 0; i < Object.keys(probabilities).length; i += 1) {
+        const prob = probabilities[Object.keys(probabilities)[i]];
+
+        const col = Object.keys(probabilities)[i][0];
+        const row = parseInt(Object.keys(probabilities)[i][1] + Object.keys(probabilities)[i][2]);
+
+        const cell = $('.grid#user .cell[data-row="' + row + '"][data-col="' + col + '"]')
+
+        cell.css('background-color', 'rgba(0, 0, 0, ' + (prob * 0.025) + ')').text(prob);
     }
 }
